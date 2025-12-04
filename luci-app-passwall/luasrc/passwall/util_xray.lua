@@ -155,6 +155,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 					serverName = node.tls_serverName,
 					allowInsecure = (node.tls_allowInsecure == "1") and true or false,
 					fingerprint = (node.type == "Xray" and node.utls == "1" and node.fingerprint and node.fingerprint ~= "") and node.fingerprint or nil,
+					pinnedPeerCertificateChainSha256 = node.tls_chain_fingerprint and { node.tls_chain_fingerprint } or nil,
 					echConfigList = (node.ech == "1") and node.ech_config or nil,
 					echForceQuery = (node.ech == "1") and (node.ech_ForceQuery or "none") or nil
 				} or nil,
@@ -222,7 +223,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 					host = node.xhttp_host,
 					-- 如果包含 "extra" 节，取 "extra" 内的内容，否则直接赋值给 extra
 					extra = node.xhttp_extra and (function()
-							local success, parsed = pcall(jsonc.parse, node.xhttp_extra)
+							local success, parsed = pcall(jsonc.parse, api.base64Decode(node.xhttp_extra))
 							if success then
 								return parsed.extra or parsed
 							else
@@ -1237,7 +1238,7 @@ function gen_config(var)
 			_remote_dns.address = remote_dns_udp_server
 			_remote_dns.port = tonumber(remote_dns_udp_port) or 53
 		else
-			address = "tcp://" .. remote_dns_tcp_server .. ":" .. tonumber(remote_dns_tcp_port) or 53
+			_remote_dns.address = "tcp://" .. remote_dns_tcp_server .. ":" .. tonumber(remote_dns_tcp_port) or 53
 		end
 
 		local _remote_dns_host
